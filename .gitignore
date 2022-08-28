@@ -13,5 +13,6 @@
 *.xtr
 *.swp
 !**/Figs/*.pdf
+*.~undo-tree~
 
 

