@@ -21,18 +21,41 @@ $hashed_pwd = sha1($input_pwd);
 // create a connection
 $conn = getDB();
 
-// do the query
-$result = $conn->query("SELECT id, name, eid, salary, ssn
-                        FROM credential
-                        WHERE name= '$input_uname' and Password= '$hashed_pwd'");
-if ($result->num_rows > 0) {
-  // only take the first row 
+/*
+  // do the query
+  $result = $conn->query("SELECT id, name, eid, salary, ssn
+  FROM credential
+  WHERE name= '$input_uname' and Password= '$hashed_pwd'");
+ */
+
+$sql = "SELECT id, name, eid, salary, ssn FROM credential where name=:name and Password=:password";
+
+/*
+  if ($result->num_rows > 0) {
+  // only take the first row
   $firstrow = $result->fetch_assoc();
   $id     = $firstrow["id"];
   $name   = $firstrow["name"];
   $eid    = $firstrow["eid"];
   $salary = $firstrow["salary"];
   $ssn    = $firstrow["ssn"];
+  }
+ */
+
+if ($stmt = $conn->prepare($sql)) {
+    $stmt->bindParam(':name', $input_uname);
+    $stmt->bindParam(':password', $input_pwd);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        // only take the first row
+        $firstrow = $result->fetch_assoc();
+        $id     = $firstrow["id"];
+        $name   = $firstrow["name"];
+        $eid    = $firstrow["eid"];
+        $salary = $firstrow["salary"];
+        $ssn    = $firstrow["ssn"];
+    }
 }
 
 // close the sql connection

