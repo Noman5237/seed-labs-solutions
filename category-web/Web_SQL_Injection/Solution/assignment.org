@@ -51,6 +51,7 @@
 ** Screenshot
 [[./screenshots/assignment/task-2-name-column-number.png]]
 
+
 * Task 3
 ** Union Attack
 *** Insert {{' OR FALSE UNION SELECT 1,version(),null,null,null,null,null,null,null,null,null #}} in the username
@@ -78,6 +79,7 @@
     This in turn will either spit up all users or sign me as first user.
     Or we can inject other conditions instead of TRUE to get access for a specific user if we know the columns of the database.
 
+    
 * Task 7
 *** If we set name {{Reddington', salary=1}} and we know an information like eid or other column value unique to the attacker we can update any columns we want.
     Here we are assuming that we know the employee id, then we have to pass {{1';--}} to the employee id.
