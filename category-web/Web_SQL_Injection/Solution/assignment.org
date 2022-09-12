@@ -80,7 +80,7 @@
     This in turn will either spit up all users or sign me as first user.
     Or we can inject other conditions instead of TRUE to get access for a specific user if we know the columns of the database.
 ** Approach 2
-*** If we provide eid with {{' TRUE or /*}} and password with {{*/;--}} the transferred SQL looks like below.
+*** If we provide eid with {{' TRUE or \slash​\ast}} and password with {{\ast​\slash;--}} the transferred SQL looks like below.
     #+BEGIN_SRC sql
       SELECT * FROM customers
       WHERE eid='' or TRUE /*
