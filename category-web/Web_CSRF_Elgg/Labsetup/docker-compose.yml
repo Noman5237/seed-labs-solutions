@@ -26,12 +26,13 @@ services:
                 ipv4_address: 10.9.0.6
 
     attacker:
-        build: ./image_attacker
-        image: seed-image-attacker-csrf
+        build:
+            context: ./image_attacker
+            dockerfile: Dockerfile
         container_name: attacker-10.9.0.105
         tty: true
         volumes:
-                - ./attacker:/var/www/attacker
+                - ./attacker:/app/static
         networks:
             net-10.9.0.0:
                 ipv4_address: 10.9.0.105
@@ -43,3 +44,5 @@ networks:
             config:
                 - subnet: 10.9.0.0/24
 
+volumes:
+    seed-image-attacker-csrf-node_modules:
