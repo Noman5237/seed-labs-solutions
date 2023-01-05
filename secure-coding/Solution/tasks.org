@@ -1,0 +1,195 @@
+* Task 1
+
+#+BEGIN_SRC c
+  enum { TABLESIZE = 100 };
+
+  static int table[TABLESIZE];
+
+  int *f(int index) {
+    if (index < TABLESIZE) {
+      return table + index;
+    }
+    return NULL;
+  }
+#+END_SRC
+
+** Problem:
+*** negative index access is not protected
+
+** Solution:
+#+BEGIN_SRC c
+  enum { TABLESIZE = 100 };
+
+  static int table[TABLESIZE];
+
+  // 1. Using unsigned integer instead of signed integer for storing the index because index can never be negative
+  int *f(size_t index) {
+    if (index < TABLESIZE) {
+      return table + index;
+    }
+    return NULL;
+  }
+#+END_SRC
+
+* Task 2
+
+#+BEGIN_SRC c
+  #include <stddef.h>
+  #define COLS 5
+  #define ROWS 7
+  static int matrix[ROWS][COLS];
+
+  void init_matrix(int x) {
+    for (size_t i = 0; i < COLS; i++) {
+      for (size_t j = 0; j < ROWS; j++) {
+        matrix[i][j] = x;
+      }
+    }
+  }
+#+END_SRC
+
+** Problem:
+*** No of colums and rows can be different and in such case as we are indexing the first matrix first by i which is not constrained by ROWS will produce segmenatation faults due to inaccessible memory and vice versa for j
+
+** Solution:
+#+BEGIN_SRC c
+  #include <stddef.h>
+  #define COLS 5
+  #define ROWS 7
+  static int matrix[ROWS][COLS];
+
+  void init_matrix(int x) {
+    for (size_t i = 0; i < ROWS; i++) {
+      for (size_t j = 0; j < COLS; j++) {
+        matrix[i][j] = x;
+      }
+    }
+  }
+#+END_SRC
+
+* Task 3
+
+#+BEGIN_SRC c
+  #include <string.h>
+  #include <stdlib.h>
+
+  char *init_block(size_t block_size, size_t offset,
+
+  char *data, size_t data_size) {
+    char *buffer = malloc(block_size);
+    if (data_size > block_size || block_size - data_size < offset) {
+      /* Data won't fit in buffer, handle error */
+    }
+    memcpy(buffer + offset, data, data_size);
+    return buffer;
+  }
+#+END_SRC
+
+** Problem:
+*** The program doesn't check whether the buffer has acutally been allocated memory or not
+
+** Solution:
+#+BEGIN_SRC c
+  #include <string.h>
+  #include <stdlib.h>
+
+  char *init_block(size_t block_size, size_t offset,
+
+  char *data, size_t data_size) {
+    char *buffer = malloc(block_size);
+    if (buffer == NULL) {
+      /* buffer is NULL, handle error */
+    }
+    if (data_size > block_size || block_size - data_size < offset) {
+      /* Data won't fit in buffer, handle error */
+    }
+    memcpy(buffer + offset, data, data_size);
+    return buffer;
+  }
+#+END_SRC
+
+* Task 4
+
+#+BEGIN_SRC c
+  void clear(int array[]) {
+    for (size_t i = 0; i < sizeof(array) / sizeof(array[0]); ++i) {
+      array[i] = 0;
+    }
+  }
+
+  void dowork(void) {
+    int dis[12];
+    clear(dis);
+    /* ... */
+  }
+#+END_SRC
+
+** Problem:
+*** Using the sizeof operator on array that is not declared in the current stack will product inaccurate results
+
+** Solution:
+#+BEGIN_SRC c
+  void clear(int array[], int array_size) {
+    for (size_t i = 0; i < array_size; ++i) {
+      array[i] = 0;
+    }
+  }
+
+  void dowork(void) {
+    int dis[12];
+    clear(dis, sizeof(dis) / sizeof(dis[0]));
+    /* ... */
+  }
+#+END_SRC
+
+* Task 5
+
+#+BEGIN_SRC c
+  #include <stdio.h>
+  void func(void) {
+    char c_str[3] = "abc";
+    printf("%s\n", c_str);
+  }
+#+END_SRC
+
+** Problem:
+*** The length of the string actually crosses the allocated size of 3, because c strings must end with \0, otherwise it will leak the neighbouring contents of the memory 
+
+** Solution:
+#+BEGIN_SRC c
+  #include <stdio.h>
+  void func(void) {
+    const char* c_str = "abc";
+    printf("%s\n", c_str);
+  }
+#+END_SRC
+
+
+* Task 6
+#+BEGIN_SRC c
+
+  #include <stddef.h>
+  void copy(size_t n, char src[n], char dest[n]) {
+    size_t i;
+    for (i = 0; src[i] && (i < n); ++i) {
+      dest[i] = src[i];
+    }
+    dest[i] = '\0';
+  }
+#+END_SRC
+
+** Problem:
+*** The last character of a c string must be \0, so we should only copy upto n-1 characters for a string of size n
+
+** Solution
+#+BEGIN_SRC c
+
+  #include <stddef.h>
+  void copy(size_t n, char src[n], char dest[n]) {
+    size_t i;
+    for (i = 0; src[i] && (i < n - 1); ++i) {
+      dest[i] = src[i];
+    }
+    dest[i] = '\0';
+  }
+#+END_SRC
